@@ -128,6 +128,13 @@ func login(w http.ResponseWriter, r *http.Request) {
 
 }
 
+func logout(w http.ResponseWriter, r *http.Request) {
+	session := sessions.Start(w, r)
+	session.Clear()
+	sessions.Destroy(w, r)
+	http.Redirect(w, r, "/", 302)
+}
+
 func main() {
 	connectDB()
 	routes()
