@@ -98,6 +98,36 @@ func register(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func login(w http.ResponseWriter, r *http.Request) {
+	session := sessions.Start(w, r)
+	if len(session.GetString("username")) != 0 && checkErr(w, r, err) {
+		http.Redirect(w, r, "/", 302)
+	}
+	if r.Method != "POST" {
+		http.ServeFile(w, r, "views/login.html")
+		return
+	}
+	username := r.FormValue("username")
+	password := r.FormValue("password")
+
+	users := QueryUser(username)
+
+	// compare password
+	var passwordTes = bcrypt.CompareHashAndPassword([]byte(users.Password), []byte(password))
+
+	if passwordTes == nil {
+		//login success
+		session := sessions.Start(w, r)
+		session.Set("username", users.Username)
+		session.Set("name", users.FirstName)
+		http.Redirect(w, r, "/", 302)
+	} else {
+		//login failed
+		http.Redirect(w, r, "/login", 302)
+	}
+
+}
+
 func main() {
 	connectDB()
 	routes()
