@@ -3,14 +3,25 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"html/template"
 	"log"
 	"net/http"
 
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/kataras/go-sessions"
+	"golang.org/x/crypto/bcrypt"
 )
 
 var db *sql.DB
 var err error
+
+type user struct {
+	ID        int
+	username  string
+	FirstName string
+	LastName  string
+	Password  string
+}
 
 func connectDB() {
 	db, err = sql.Open("mysql", "root:@kingkunta@/alik_db")
@@ -26,7 +37,65 @@ func connectDB() {
 }
 
 func routes() {
+	http.HandleFunc("/", home)
+	http.HandleFunc("/register", register)
+	http.HandleFunc("/login", login)
+	http.HandleFunc("/logout", logout)
+}
 
+// home function is the homepage for our app
+func home(w http.ResponseWriter, r *http.Request) {
+	session := sessions.Start(w, r)
+	if len(session.GetString("username")) == 0 {
+		http.Redirect(w, r, "/login", 301)
+	}
+
+	var data = map[string]string{
+		"username": session.GetString("username"),
+		"message":  "Welcome to our app",
+	}
+	var t, err = template.ParseFiles("views/home.html")
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+	t.Execute(w, data)
+	return
+
+}
+
+func register(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		http.ServeFile(w, r, "views/register.html")
+		return
+	}
+
+	username := r.FormValue("email")
+	firstName := r.FormValue("first_name")
+	lastName := r.FormValue("last_name")
+	password := r.FormValue("password")
+
+	users := QueryUser(username)
+
+	if (user{}) == users {
+		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+
+		if len(hashedPassword) != 0 && checkErr(w, r, err) {
+			stmt, err := db.Prepare("INSERT INTO users SET username=?, password=?, firstName=?, lastName=?")
+			if err == nil {
+				_, err := stmt.Exec(&username, &hashedPassword, &firstName, &lastName)
+				if err != nil {
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					return
+				}
+
+				http.Redirect(w, r, "/login", http.StatusSeeOther)
+				return
+			}
+		}
+	} else {
+		http.Redirect(w, r, "/register", 302)
+	}
 }
 
 func main() {
