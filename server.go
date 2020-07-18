@@ -43,6 +43,39 @@ func routes() {
 	http.HandleFunc("/logout", logout)
 }
 
+func checkErr(w http.ResponseWriter, r *http.Request, err error) bool {
+	if err != nil {
+
+		fmt.Println(r.Host + r.URL.Path)
+
+		http.Redirect(w, r, r.Host+r.URL.Path, 301)
+		return false
+	}
+
+	return true
+}
+
+// QueryUser scans through the database and returns data
+func QueryUser(username string) user {
+	var users = user{}
+	err = db.QueryRow(`
+		SELECT id, 
+		username, 
+		first_name, 
+		last_name, 
+		password 
+		FROM users WHERE username=?
+		`, username).
+		Scan(
+			&users.ID,
+			&users.Username,
+			&users.FirstName,
+			&users.LastName,
+			&users.Password,
+		)
+	return users
+}
+
 // home function is the homepage for our app
 func home(w http.ResponseWriter, r *http.Request) {
 	session := sessions.Start(w, r)
