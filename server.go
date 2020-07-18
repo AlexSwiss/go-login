@@ -17,7 +17,7 @@ var err error
 
 type user struct {
 	ID        int
-	username  string
+	Username  string
 	FirstName string
 	LastName  string
 	Password  string
@@ -61,8 +61,8 @@ func QueryUser(username string) user {
 	err = db.QueryRow(`
 		SELECT id, 
 		username, 
-		first_name, 
-		last_name, 
+		firstName, 
+		lastName, 
 		password 
 		FROM users WHERE username=?
 		`, username).
