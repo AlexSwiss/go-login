@@ -25,6 +25,7 @@ var (
 	oauthStateString = "pseudo-random"
 )
 
+// initialize google oauth2 credentials
 func init() {
 	googleOauthConfig = &oauth2.Config{
 		RedirectURL:  "https://mighty-temple-77063.herokuapp.com/home",
@@ -100,11 +101,13 @@ func QueryUser(username string) user {
 	return users
 }
 
+// handleGoogleLogin function handles the oauth logic
 func handleGoogleLogin(w http.ResponseWriter, r *http.Request) {
 	url := googleOauthConfig.AuthCodeURL(oauthStateString)
 	http.Redirect(w, r, url, http.StatusTemporaryRedirect)
 }
 
+// handleGoogleCallback gets the user info
 func handleGoogleCallback(w http.ResponseWriter, r *http.Request) {
 	content, err := getUserInfo(r.FormValue("state"), r.FormValue("code"))
 	if err != nil {
