@@ -27,7 +27,7 @@ var (
 
 func init() {
 	googleOauthConfig = &oauth2.Config{
-		RedirectURL:  "http://localhost:8080/callback",
+		RedirectURL:  "https://mighty-temple-77063.herokuapp.com/callback",
 		ClientID:     os.Getenv("GOOGLE_CLIENT_ID"),
 		ClientSecret: os.Getenv("GOOGLE_CLIENT_SECRET"),
 		Scopes:       []string{"https://www.googleapis.com/auth/userinfo.email"},
