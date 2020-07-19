@@ -20,6 +20,12 @@ var db *sql.DB
 var err error
 
 var (
+	googleOauthConfig *oauth2.Config
+	// Some random string, random for each request
+	oauthStateString = "random"
+)
+
+func init() {
 	googleOauthConfig = &oauth2.Config{
 		RedirectURL:  "http://localhost:3000/GoogleCallback",
 		ClientID:     os.Getenv("googlekey"),
@@ -28,9 +34,7 @@ var (
 			"https://www.googleapis.com/auth/userinfo.email"},
 		Endpoint: google.Endpoint,
 	}
-	// Some random string, random for each request
-	oauthStateString = "random"
-)
+}
 
 type user struct {
 	ID        int
