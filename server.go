@@ -60,7 +60,8 @@ func connectDB() {
 func routes() {
 	http.HandleFunc("/", home)
 	http.HandleFunc("/register", register) // handler for our register route
-	http.HandleFunc("/login", handleGoogleLogin)
+	http.HandleFunc("/login", login)       // handler for our login route
+	http.HandleFunc("/loginGoogle", handleGoogleLogin)
 	http.HandleFunc("/callback", handleGoogleCallback)
 
 }
