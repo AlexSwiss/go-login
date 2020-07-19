@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"html/template"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -11,10 +12,25 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/kataras/go-sessions"
 	"golang.org/x/crypto/bcrypt"
+	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/google"
 )
 
 var db *sql.DB
 var err error
+
+var (
+	googleOauthConfig = &oauth2.Config{
+		RedirectURL:  "http://localhost:3000/GoogleCallback",
+		ClientID:     os.Getenv("googlekey"),
+		ClientSecret: os.Getenv("googlesecret"),
+		Scopes: []string{"https://www.googleapis.com/auth/userinfo.profile",
+			"https://www.googleapis.com/auth/userinfo.email"},
+		Endpoint: google.Endpoint,
+	}
+	// Some random string, random for each request
+	oauthStateString = "random"
+)
 
 type user struct {
 	ID        int
@@ -24,6 +40,7 @@ type user struct {
 	Password  string
 }
 
+// connectDB function connects to our mysql database
 func connectDB() {
 	db, err = sql.Open("mysql", "sql3355940:eWJU2aGWpg@tcp(sql3.freemysqlhosting.net:3306)/sql3355940")
 
@@ -39,11 +56,14 @@ func connectDB() {
 
 func routes() {
 	http.HandleFunc("/", home)
-	http.HandleFunc("/register", register)
-	http.HandleFunc("/login", login)
-	http.HandleFunc("/logout", logout)
+	http.HandleFunc("/register", register) // handler for our register route
+	http.HandleFunc("/login", login)       // handler for our login route
+	http.HandleFunc("/logout", logout)     // handler for our logout function
+	http.HandleFunc("/GoogleLogin", handleGoogleLogin)
+	http.HandleFunc("/GoogleCallback", handleGoogleCallback)
 }
 
+// checkErr function handles the error
 func checkErr(w http.ResponseWriter, r *http.Request, err error) bool {
 	if err != nil {
 
@@ -77,6 +97,34 @@ func QueryUser(username string) user {
 	return users
 }
 
+func handleGoogleLogin(w http.ResponseWriter, r *http.Request) {
+	url := googleOauthConfig.AuthCodeURL(oauthStateString)
+	http.Redirect(w, r, url, http.StatusTemporaryRedirect)
+}
+
+func handleGoogleCallback(w http.ResponseWriter, r *http.Request) {
+	state := r.FormValue("state")
+	if state != oauthStateString {
+		fmt.Printf("invalid oauth state, expected '%s', got '%s'\n", oauthStateString, state)
+		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+		return
+	}
+
+	code := r.FormValue("code")
+	token, err := googleOauthConfig.Exchange(oauth2.NoContext, code)
+	if err != nil {
+		fmt.Println("Code exchange failed with '%s'\n", err)
+		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+		return
+	}
+
+	response, err := http.Get("https://www.googleapis.com/oauth2/v2/userinfo?access_token=" + token.AccessToken)
+
+	defer response.Body.Close()
+	contents, err := ioutil.ReadAll(response.Body)
+	fmt.Fprintf(w, "Content: %s\n", contents)
+}
+
 // home function is the homepage for our app
 func home(w http.ResponseWriter, r *http.Request) {
 	session := sessions.Start(w, r)
@@ -98,6 +146,7 @@ func home(w http.ResponseWriter, r *http.Request) {
 
 }
 
+// register function handles the logic for adding new user
 func register(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
 		http.ServeFile(w, r, "views/register.html")
@@ -132,6 +181,7 @@ func register(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// login handles the logic to signin the user
 func login(w http.ResponseWriter, r *http.Request) {
 	session := sessions.Start(w, r)
 	if len(session.GetString("username")) != 0 && checkErr(w, r, err) {
@@ -162,6 +212,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 
 }
 
+// logout handle the function to signout a user
 func logout(w http.ResponseWriter, r *http.Request) {
 	session := sessions.Start(w, r)
 	session.Clear()
