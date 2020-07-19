@@ -6,6 +6,7 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"os"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/kataras/go-sessions"
@@ -175,5 +176,5 @@ func main() {
 	defer db.Close()
 
 	fmt.Println("Server running on port :8080")
-	http.ListenAndServe(":8080", nil)
+	http.ListenAndServe(":"+os.Getenv("PORT"), nil)
 }
