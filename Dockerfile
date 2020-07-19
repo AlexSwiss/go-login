@@ -25,8 +25,6 @@ RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o server .
 ######## Start a new stage from scratch #######
 FROM alpine:latest  
 
-# Copy go mod and sum files
-COPY views/ views/
 
 RUN apk --no-cache add ca-certificates
 
@@ -34,6 +32,8 @@ WORKDIR /root/
 
 # Copy the Pre-built binary file from the previous stage
 COPY --from=builder /app/server .
+# Copy views
+COPY --from=builder /app/views/ views/
 
 # Expose port 8080 to the outside world
 EXPOSE 8080
