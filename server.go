@@ -113,7 +113,14 @@ func handleGoogleCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Fprintf(w, "Content: %s\n", content)
+	session := sessions.Start(w, r)
+
+	if r.Method != "POST" {
+		http.ServeFile(w, r, "views/login.html")
+		return
+	}
+	session.Set("firstName", content)
+
 }
 
 func getUserInfo(state string, code string) ([]byte, error) {
