@@ -24,7 +24,7 @@ type user struct {
 }
 
 func connectDB() {
-	db, err = sql.Open("mysql", "root:@kingkunta@/alik_db")
+	db, err = sql.Open("mysql", "sql3355940:eWJU2aGWpg@tcp(sql3.freemysqlhosting.net:3306)/sql3355940")
 
 	if err != nil {
 		log.Fatalln(err)
@@ -152,7 +152,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 		//login success
 		session := sessions.Start(w, r)
 		session.Set("username", users.Username)
-		session.Set("name", users.FirstName)
+		session.Set("firstName", users.FirstName)
 		http.Redirect(w, r, "/", 302)
 	} else {
 		//login failed
