@@ -27,7 +27,7 @@ var (
 
 func init() {
 	googleOauthConfig = &oauth2.Config{
-		RedirectURL:  "https://mighty-temple-77063.herokuapp.com/callback",
+		RedirectURL:  "https://mighty-temple-77063.herokuapp.com/home",
 		ClientID:     "899343465466-bbv6cse4hrl93ks1m772krgo2tkqf6q4.apps.googleusercontent.com",
 		ClientSecret: "ao9UzGVdeCdPzr6mejaDuozp",
 		Scopes:       []string{"https://www.googleapis.com/auth/userinfo.email"},
@@ -62,7 +62,7 @@ func routes() {
 	http.HandleFunc("/register", register) // handler for our register route
 	http.HandleFunc("/login", login)       // handler for our login route
 	http.HandleFunc("/loginGoogle", handleGoogleLogin)
-	http.HandleFunc("/callback", handleGoogleCallback)
+	http.HandleFunc("/home", handleGoogleCallback)
 
 }
 
